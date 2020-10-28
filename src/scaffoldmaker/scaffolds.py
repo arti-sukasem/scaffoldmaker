@@ -5,12 +5,16 @@ Class for listing and accessing all mesh type scripts supported by scaffoldmaker
 import json
 from scaffoldmaker.meshtypes.meshtype_1d_bifurcationtree1 import MeshType_1d_bifurcationtree1
 from scaffoldmaker.meshtypes.meshtype_1d_path1 import MeshType_1d_path1
+from scaffoldmaker.meshtypes.meshtype_1d_lungpath1 import MeshType_1d_lungpath1
+from scaffoldmaker.meshtypes.meshtype_3d_lungcontrolcurves import MeshType_3d_lungcontrolcurves
+from scaffoldmaker.meshtypes.meshtype_3d_lungmeshusingcurves import MeshType_3d_lungmesh
 from scaffoldmaker.meshtypes.meshtype_2d_plate1 import MeshType_2d_plate1
 from scaffoldmaker.meshtypes.meshtype_2d_platehole1 import MeshType_2d_platehole1
 from scaffoldmaker.meshtypes.meshtype_2d_sphere1 import MeshType_2d_sphere1
 from scaffoldmaker.meshtypes.meshtype_2d_tube1 import MeshType_2d_tube1
 from scaffoldmaker.meshtypes.meshtype_2d_tubebifurcation1 import MeshType_2d_tubebifurcation1
 from scaffoldmaker.meshtypes.meshtype_3d_bladder1 import MeshType_3d_bladder1
+from scaffoldmaker.meshtypes.meshtype_3d_bladderurethra1 import MeshType_3d_bladderurethra1
 from scaffoldmaker.meshtypes.meshtype_3d_box1 import MeshType_3d_box1
 from scaffoldmaker.meshtypes.meshtype_3d_boxhole1 import MeshType_3d_boxhole1
 from scaffoldmaker.meshtypes.meshtype_3d_cecum1 import MeshType_3d_cecum1
@@ -29,11 +33,14 @@ from scaffoldmaker.meshtypes.meshtype_3d_heartventriclesbase1 import MeshType_3d
 from scaffoldmaker.meshtypes.meshtype_3d_heartventriclesbase2 import MeshType_3d_heartventriclesbase2
 from scaffoldmaker.meshtypes.meshtype_3d_lens1 import MeshType_3d_lens1
 from scaffoldmaker.meshtypes.meshtype_3d_lung1 import MeshType_3d_lung1
+from scaffoldmaker.meshtypes.meshtype_3d_lungs1 import MeshType_3d_lungs1
 from scaffoldmaker.meshtypes.meshtype_3d_ostium1 import MeshType_3d_ostium1
 from scaffoldmaker.meshtypes.meshtype_3d_smallintestine1 import MeshType_3d_smallintestine1
 from scaffoldmaker.meshtypes.meshtype_3d_solidsphere1 import MeshType_3d_solidsphere1
+from scaffoldmaker.meshtypes.meshtype_3d_solidcylinder1 import MeshType_3d_solidcylinder1
 from scaffoldmaker.meshtypes.meshtype_3d_sphereshell1 import MeshType_3d_sphereshell1
 from scaffoldmaker.meshtypes.meshtype_3d_sphereshellseptum1 import MeshType_3d_sphereshellseptum1
+from scaffoldmaker.meshtypes.meshtype_3d_stellate1 import MeshType_3d_stellate1
 from scaffoldmaker.meshtypes.meshtype_3d_stomachhuman1 import MeshType_3d_stomachhuman1
 from scaffoldmaker.meshtypes.meshtype_3d_tube1 import MeshType_3d_tube1
 from scaffoldmaker.meshtypes.meshtype_3d_tubeseptum1 import MeshType_3d_tubeseptum1
@@ -46,12 +53,16 @@ class Scaffolds(object):
         self._allScaffoldTypes = [
             MeshType_1d_bifurcationtree1,
             MeshType_1d_path1,
+            MeshType_1d_lungpath1,
+            MeshType_3d_lungcontrolcurves,
+            MeshType_3d_lungmesh,
             MeshType_2d_plate1,
             MeshType_2d_platehole1,
             MeshType_2d_sphere1,
             MeshType_2d_tube1,
             MeshType_2d_tubebifurcation1,
             MeshType_3d_bladder1,
+            MeshType_3d_bladderurethra1,
             MeshType_3d_box1,
             MeshType_3d_boxhole1,
             MeshType_3d_cecum1,
@@ -70,14 +81,17 @@ class Scaffolds(object):
             MeshType_3d_heartventriclesbase2,
             MeshType_3d_lens1,
             MeshType_3d_lung1,
+            MeshType_3d_lungs1,
             MeshType_3d_ostium1,
             MeshType_3d_smallintestine1,
             MeshType_3d_solidsphere1,
+            MeshType_3d_solidcylinder1,
             MeshType_3d_sphereshell1,
             MeshType_3d_sphereshellseptum1,
+            MeshType_3d_stellate1,
             MeshType_3d_stomachhuman1,
             MeshType_3d_tube1,
-            MeshType_3d_tubeseptum1
+            MeshType_3d_tubeseptum1,
             ]
 
     def findScaffoldTypeByName(self, name):

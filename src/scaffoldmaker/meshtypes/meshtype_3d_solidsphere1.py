@@ -70,10 +70,10 @@ class MeshType_3d_solidsphere1(Scaffold_base):
     @classmethod
     def generateBaseMesh(cls, region, options):
         """
-        Generate the base tricubic Hermite mesh. See also generateMesh().
+        Generate the base tricubic Hermite mesh.
         :param region: Zinc region to define model in. Must be empty.
         :param options: Dict containing options. See getDefaultOptions().
-        :return: None
+        :return: [] empty list of AnnotationGroup
         """
         elementsCountAround = options['Number of elements around']
         elementsCountUp = options['Number of elements up']
@@ -396,6 +396,7 @@ class MeshType_3d_solidsphere1(Scaffold_base):
                 if e3 == 0:
                     for e1 in range(elementsCountAround):
                         # create central radial elements: 6 node wedges
+                        # create central radial elements: 6 node wedges
                         va = e1
                         vb = (e1 + 1)%elementsCountAround
                         eft2 = tricubichermite.createEftWedgeRadial(va*100, vb*100)
@@ -403,6 +404,7 @@ class MeshType_3d_solidsphere1(Scaffold_base):
                         element = mesh.createElement(elementIdentifier, elementtemplate2)
                         bni2 = elementsCountUp + 1 + (e2-1) * no2 + 1
                         nodeIdentifiers = [ e3 + e2 + 1, e3 + e2 + 2, bni2 + va, bni2 + vb, bni2 + va + elementsCountAround, bni2 + vb + elementsCountAround ]
+                        print('wedge elem=',e3 + e2 + 1, e3 + e2 + 2, bni2 + va, bni2 + vb, bni2 + va + elementsCountAround, bni2 + vb + elementsCountAround)
                         result1 = element.setNodesByIdentifier(eft2, nodeIdentifiers)
                         # set general linear map coefficients
                         radiansAround = va*radiansPerElementAround
@@ -477,6 +479,7 @@ class MeshType_3d_solidsphere1(Scaffold_base):
                     elementtemplate5.defineField(coordinates, -1, eft5)
                     element = mesh.createElement(elementIdentifier, elementtemplate5)
                     nodeIdentifiers = [ bni5 + va, bni5 + vb, elementsCountUp + 1, bni5 + no3 + va, bni5 + no3 + vb ]
+                    print('sphere elem order =', bni5 + va,bni5 + vb, elementsCountUp + 1,bni5 + no3 + va,bni5 + no3 + vb )
                     result1 = element.setNodesByIdentifier(eft5, nodeIdentifiers)
                     # set general linear map coefficients
                     radiansAround = va*radiansPerElementAround
@@ -493,24 +496,17 @@ class MeshType_3d_solidsphere1(Scaffold_base):
                     elementIdentifier = elementIdentifier + 1
 
         fm.endChange()
+        return []
 
     @classmethod
-    def generateMesh(cls, region, options):
+    def refineMesh(cls, meshrefinement, options):
         """
-        Generate base or refined mesh.
-        :param region: Zinc region to create mesh in. Must be empty.
+        Refine source mesh into separate region, with change of basis.
+        :param meshrefinement: MeshRefinement, which knows source and target region.
         :param options: Dict containing options. See getDefaultOptions().
         """
-        if not options['Refine']:
-            cls.generateBaseMesh(region, options)
-            return
-
+        assert isinstance(meshrefinement, MeshRefinement)
         refineElementsCountAround = options['Refine number of elements around']
         refineElementsCountUp = options['Refine number of elements up']
         refineElementsCountRadial = options['Refine number of elements radial']
-
-        baseRegion = region.createRegion()
-        cls.generateBaseMesh(baseRegion, options)
-
-        meshrefinement = MeshRefinement(baseRegion, region)
         meshrefinement.refineAllElementsCubeStandard3d(refineElementsCountAround, refineElementsCountUp, refineElementsCountRadial)

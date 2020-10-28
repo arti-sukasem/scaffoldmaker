@@ -209,10 +209,10 @@ class MeshType_3d_bladder1(Scaffold_base):
         if (options['Major diameter'] < options['Minor diameter']):
             options['Major diameter'] = options['Minor diameter']
 
-    @staticmethod
-    def generateBaseMesh(region, options):
+    @classmethod
+    def generateBaseMesh(cls, region, options):
         '''
-        Generate the base bicubic Hermite mesh. See also generateMesh().
+        Generate the base bicubic Hermite mesh.
         :param region: Zinc region to define model in. Must be empty.
         :param options: Dict containing options. See getDefaultOptions().
         :return: list of AnnotationGroup
@@ -239,7 +239,6 @@ class MeshType_3d_bladder1(Scaffold_base):
         coordinates = findOrCreateFieldCoordinates(fm)
         cache = fm.createFieldcache()
 
-        mesh = fm.findMeshByDimension(3)
 
         nodes = fm.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
         nodetemplateApex = nodes.createNodetemplate()
@@ -257,6 +256,7 @@ class MeshType_3d_bladder1(Scaffold_base):
         else:
             nodetemplate = nodetemplateApex
 
+        mesh = fm.findMeshByDimension(3)
         eftfactory = eftfactory_bicubichermitelinear(mesh, useCrossDerivatives)
         eft = eftfactory.createEftBasic()
 

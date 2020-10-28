@@ -30,6 +30,7 @@ class MeshType_3d_colon1(Scaffold_base):
         'Human 1' : ScaffoldPackage(MeshType_1d_path1, {
             'scaffoldSettings' : {
                 'Coordinate dimensions' : 3,
+                'D2 derivatives': True,
                 'Length' : 1.0,
                 'Number of elements' : 8
                 },
@@ -48,6 +49,7 @@ class MeshType_3d_colon1(Scaffold_base):
         'Human 2' : ScaffoldPackage(MeshType_1d_path1, {
             'scaffoldSettings' : {
                 'Coordinate dimensions' : 3,
+                'D2 derivatives': True,
                 'Length' : 1.0,
                 'Number of elements' : 8
                 },
@@ -66,6 +68,7 @@ class MeshType_3d_colon1(Scaffold_base):
         'Mouse 1' : ScaffoldPackage(MeshType_1d_path1, {
             'scaffoldSettings' : {
                 'Coordinate dimensions' : 3,
+                'D2 derivatives': True,
                 'Length' : 1.0,
                 'Number of elements' : 7
                 },
@@ -83,6 +86,7 @@ class MeshType_3d_colon1(Scaffold_base):
         'Mouse 2' : ScaffoldPackage(MeshType_1d_path1, {
             'scaffoldSettings' : {
                 'Coordinate dimensions' : 3,
+                'D2 derivatives': True,
                 'Length' : 1.0,
                 'Number of elements' : 4
                 },
@@ -97,6 +101,7 @@ class MeshType_3d_colon1(Scaffold_base):
         'Pig 1' : ScaffoldPackage(MeshType_1d_path1, {
             'scaffoldSettings' : {
                 'Coordinate dimensions' : 3,
+                'D2 derivatives': True,
                 'Length' : 1.0,
                 'Number of elements' : 36
                 },
@@ -143,6 +148,7 @@ class MeshType_3d_colon1(Scaffold_base):
         'Pig 2': ScaffoldPackage(MeshType_1d_path1, {
             'scaffoldSettings': {
                 'Coordinate dimensions': 3,
+                'D2 derivatives': True,
                 'Length': 90.0,
                 'Number of elements': 3
             },
@@ -347,7 +353,7 @@ class MeshType_3d_colon1(Scaffold_base):
     @classmethod
     def generateBaseMesh(cls, region, options):
         """
-        Generate the base tricubic Hermite mesh. See also generateMesh().
+        Generate the base tricubic Hermite mesh.
         :param region: Zinc region to define model in. Must be empty.
         :param options: Dict containing options. See getDefaultOptions().
         :return: annotationGroups
@@ -391,7 +397,9 @@ class MeshType_3d_colon1(Scaffold_base):
         # Central path
         tmpRegion = region.createRegion()
         centralPath.generate(tmpRegion)
-        cx, cd1, cd2, cd12 = extractPathParametersFromRegion(tmpRegion)
+        cx, cd1, cd2, cd12 = extractPathParametersFromRegion(tmpRegion,
+                                                             [Node.VALUE_LABEL_VALUE, Node.VALUE_LABEL_D_DS1,
+                                                              Node.VALUE_LABEL_D_DS2, Node.VALUE_LABEL_D2_DS1DS2])
         # for i in range(len(cx)):
         #     print(i, '[', cx[i], ',', cd1[i], ',', cd2[i], ',', cd12[i], '],')
         del tmpRegion
