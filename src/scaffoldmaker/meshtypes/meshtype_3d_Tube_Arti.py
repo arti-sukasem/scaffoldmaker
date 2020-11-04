@@ -12,11 +12,13 @@ from scaffoldmaker.meshtypes.scaffold_base import Scaffold_base
 from scaffoldmaker.utils.eftfactory_tricubichermite import eftfactory_tricubichermite
 from scaffoldmaker.utils.meshrefinement import MeshRefinement
 
-class MeshType_3d_lung1_Arti(Scaffold_base):
+class MeshType_3d_Tube_Arti(Scaffold_base):
     '''
     classdocs
     '''
     @staticmethod
     def getName():
-        return '3D Lung 1 Arti'
+        return '3D Tube Arti'
+
+
 
