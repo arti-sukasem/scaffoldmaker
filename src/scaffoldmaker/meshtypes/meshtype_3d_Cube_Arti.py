@@ -12,13 +12,13 @@ from scaffoldmaker.meshtypes.scaffold_base import Scaffold_base
 from scaffoldmaker.utils.eftfactory_tricubichermite import eftfactory_tricubichermite
 from scaffoldmaker.utils.meshrefinement import MeshRefinement
 
-class MeshType_3d_lung1(Scaffold_base):
+class MeshType_3d_Cube_Arti(Scaffold_base):
     '''
     classdocs
     '''
     @staticmethod
     def getName():
-        return '3D Lung 1'
+        return '3D Cube Arti'
 
     @staticmethod
     def getDefaultOptions(parameterSetName='Default'):
