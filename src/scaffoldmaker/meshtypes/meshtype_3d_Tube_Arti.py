@@ -20,7 +20,7 @@ class MeshType_3d_Tube_Arti(Scaffold_base):
 
     @staticmethod
     def getName():
-        return '2D Tube Arti'
+        return '3D Tube Arti'
 
     @staticmethod
     def getDefaultOptions(cls, parameterSetName='Default'):
@@ -45,7 +45,7 @@ class MeshType_3d_Tube_Arti(Scaffold_base):
         ]
 
     @staticmethod
-    def checkOptions(cls, options):
+    def checkOptions(options):
         if (options['Number of element around'] < 1):
             options['Number of element around'] = 1
         if (options['Number of element along'] < 1):
@@ -63,71 +63,4 @@ class MeshType_3d_Tube_Arti(Scaffold_base):
         :return: [] empty list of AnnotationGroup
         """
 
-        elementCountAround = options['Number of element around']
-        elementCountAlong = options['Number of element along']
-        useCrossDerivatives = options['Use cross derivatives']
 
-        fm = region.getFieldmodule()
-        fm.beginChange()
-        coordinates = findOrCreateFieldCoordinates(fm)
-
-        nodes = fm.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
-        nodetemplate = nodes.createNodetemplate()
-        nodetemplate.defineField(coordinates)
-        nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_VALUE, 1)
-        nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D_DS1, 1)
-        nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D_DS2, 1)
-        if useCrossDerivatives:
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS1DS2, 1)
-
-        mesh = fm.findMeshByDimension(2)
-        bicubichermite = fm.createElementbasis(2, Elementbasis.FUNCTION_TYPE_CUBIC_HERMITE)
-        eft = mesh.createElementfieldtemplate(bicubichermite)
-        if not useCrossDerivatives:
-            for n in range(4):
-                eft.setFunctionNumberOfTerms(n*4 + 4, 0)
-        elementtemplate = mesh.createElementtemplate()
-        elementtemplate.setElementShapeType(Element.SHAPE_TYPE_SQUARE)
-        elementtemplate.defineField(coordinates, -1, eft)
-
-        cache = fm.createFieldcache()
-
-        # create nodes
-        nodeIdentifier = 1
-        radian = 2 * math.pi / elementCountAround
-        radius = 0.5
-        x = [0.0, 0.0, 0.0]
-        dx_ds1 = [0.0, 0.0, 0.0]
-        dx_ds2 = [0.0, 0.0, 1/elementCountAlong]
-        zero = [0.0, 0.0, 0.0]
-        for n2 in range(elementCountAlong):
-            x[2] = n2 / elementCountAlong
-            for n1 in range(elementCountAround):
-                x[0] = radius * math.cos(radian * n1)
-                x[1] = radius * math.sin(radian * n1)
-                dx_ds1[0] = radius * -math.sin(radian * n1)
-                dx_ds1[1] = radius * math.cos(radian * n1)
-                node = nodes.createNode(nodeIdentifier, nodetemplate)
-                cache.setNode(node)
-                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
-                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
-                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
-
-                if useCrossDerivatives:
-                    coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS2, 1, zero)
-                print('node :', nodeIdentifier, 'coordinates: ', x)
-
-                nodeIdentifier = nodeIdentifier + 1
-
-        # create element
-        elementIdentifier = 1
-        for e2 in range(elementCountAlong):
-            for e1 in range(elementCountAround):
-                element = mesh.createElement(elementIdentifier, elementtemplate)
-                nodeIdentifiers = [1, 2, 5, 6]
-                result = element.setNodesByIdentifier(eft, nodeIdentifiers)
-                print("elementidentifier: ", elementIdentifier, " || ", nodeIdentifiers)
-                elementIdentifier = elementIdentifier + 1
-
-        fm.endChange()
-        return []
