@@ -25,6 +25,7 @@ class MeshType_2d_Tube_Arti(Scaffold_base):
     @staticmethod
     def getDefaultOptions(cls, parameterSetName='Default'):
         return {
+            'Circle radius': 0.5,
             'Number of element around': 4,
             'Number of element along': 2,
             'Use cross derivatives': False,
@@ -36,6 +37,7 @@ class MeshType_2d_Tube_Arti(Scaffold_base):
     @staticmethod
     def getOrderedOptionNames():
         return [
+            'Circle radius',
             'Number of element around',
             'Number of element along',
             'Use cross derivatives',
@@ -46,6 +48,8 @@ class MeshType_2d_Tube_Arti(Scaffold_base):
 
     @staticmethod
     def checkOptions(options):
+        if (options['Circle radius'] < 0):
+            options['Circle radius'] = 0.5
         if (options['Number of element around'] < 1):
             options['Number of element around'] = 1
         if (options['Number of element along'] < 1):
@@ -62,7 +66,7 @@ class MeshType_2d_Tube_Arti(Scaffold_base):
         :param options: Dict containing options. See getDefaultOptions().
         :return: [] empty list of AnnotationGroup
         """
-
+        radius = options['Circle radius']
         elementCountAround = options['Number of element around']
         elementCountAlong = options['Number of element along']
         useCrossDerivatives = options['Use cross derivatives']
@@ -95,7 +99,6 @@ class MeshType_2d_Tube_Arti(Scaffold_base):
         # create nodes
         nodeIdentifier = 1
         radian = 2 * math.pi / elementCountAround
-        radius = 0.5
         x = [0.0, 0.0, 0.0]
         dx_ds1 = [0.0, 0.0, 0.0]
         dx_ds2 = [0.0, 0.0, 1/elementCountAlong]
@@ -134,3 +137,15 @@ class MeshType_2d_Tube_Arti(Scaffold_base):
                 elementIdentifier = elementIdentifier + 1
         fm.endChange()
         return []
+
+    @classmethod
+    def refineMesh(cls, meshrefinement, options):
+        """
+        Refine source mesh into separate region, with change of basis.
+        :param meshrefinement: MeshRefinement, which knows source and target region.
+        :param options: Dict containing options. See getDefaultOptions().
+        """
+        refineElementsCount1 = options['Refine Element around']
+        refineElementsCount2 = options['Refine Element along']
+
+        meshrefinement.refineAllElementsCubeStandard3d(refineElementsCount1, refineElementsCount2)
