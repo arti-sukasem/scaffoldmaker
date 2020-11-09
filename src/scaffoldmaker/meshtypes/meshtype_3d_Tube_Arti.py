@@ -121,9 +121,6 @@ class MeshType_3d_Tube_Arti(Scaffold_base):
         dx_ds1 = [0.0, 0.0, 0.0]
         dx_ds2 = [0.0, 0.0, 0.0]
         dx_ds3 = [0.0, 0.0, 1.0/elementsCountAlong]
-        dx1_ds1 = [0.0, 0.0, 0.0]
-        dx1_ds2 = [0.0, 0.0, 0.0]
-        dx1_ds3 = [0.0, 0.0, 1.0 / elementsCountAlong]
         zero = [0.0, 0.0, 0.0]
         radian = 2*math.pi/elementsCountAround
 
@@ -137,7 +134,7 @@ class MeshType_3d_Tube_Arti(Scaffold_base):
                     x[2] = n3/elementsCountAlong
 
                     dx_ds1[0] = radius * -radian * math.sin(radian * n1)
-                    dx_ds2[1] = radius * radian * math.cos(radian * n1)
+                    dx_ds1[1] = radius * radian * math.cos(radian * n1)
 
                     node = nodes.createNode(nodeIdentifier, nodetemplate)
                     cache.setNode(node)
