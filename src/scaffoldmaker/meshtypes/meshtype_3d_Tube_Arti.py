@@ -117,7 +117,6 @@ class MeshType_3d_Tube_Arti(Scaffold_base):
         #create node
         nodeIdentifier = 1
         x = [0.0, 0.0, 0.0]
-        x1 = [0.0, 0.0, 0.0]
         dx_ds1 = [0.0, 0.0, 0.0]
         dx_ds2 = [0.0, 0.0, 0.0]
         dx_ds3 = [0.0, 0.0, 1.0/elementsCountAlong]
