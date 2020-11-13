@@ -34,7 +34,6 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
             # 'Number of element (height)': 4,
             'Use cross derivatives': False,
             'Cut from the corner': False,
-            'Complete': False,
             'Depth': 0,
             'Refine': False,
             'Refine Element in Width': 1,
@@ -54,7 +53,6 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
             # 'Number of element (height)',
             'Use cross derivatives',
             'Cut from the corner',
-            'Complete',
             'Depth',
             'Refine',
             'Refine Element in Width',
@@ -72,8 +70,8 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
             options['Height'] = 1.0
         if (options['Radius factor'] < 0):
             options['Radius factor'] = 1.0
-        if (options['Number of element (base width)'] < 1):
-            options['Number of element (base width)'] = 1
+        if (options['Number of element (base width)'] < 2):
+            options['Number of element (base width)'] = 2
         if (options['Number of element (base length)'] < 1):
             options['Number of element (base length)'] = 1
         if (options['Depth'] < 0):
@@ -97,7 +95,6 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
         useCrossDerivatives = options['Use cross derivatives']
         cutAngle = options['Cut from the corner']
         cutGradient = options['Depth']
-        complete = options['Complete']
 
         fm = region.getFieldmodule()
         fm.beginChange()
@@ -134,11 +131,11 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
             dx_ds2 = [0.0, 0.0, 0.0]
             dx_ds3 = [0.0, 0.0, 0.0]
             zero = [0.0, 0.0, 0.0]
-            bodyLength = length - width
-            stepLength = length/elementsCountAlong
+            bodyLength = length - width/2 * rfactor
+            stepLength = bodyLength/elementsCountAlong
             stepWidth = width/elementsCountIn
             # since #elements in height is proportional to #elements in length
-            stepHeight = height/elementsCountAlong
+            stepHeight = height/(elementsCountAlong+1)
 
             for n3 in range(elementsCountAlong+2):
                 x[2] = n3 * stepHeight
@@ -147,7 +144,7 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
                     for n1 in range(elementsCountAlong+1):
                         x[0] = (n3 * stepLength + n1 * stepLength)
 
-                        if x[0] <= length:
+                        if x[0] <= bodyLength:
                             node = nodes.createNode(nodeIdentifier, nodetemplate)
                             cache.setNode(node)
 
@@ -168,7 +165,7 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
                         yCircle = (width / 2) - x[1]
                         xCircle = math.sqrt((width/2)**2 - yCircle**2)
 
-                        x[0] = rfactor * xCircle + length
+                        x[0] = rfactor * xCircle + bodyLength
                         print("n2: ", n2)
                         print("bodylength: ", bodyLength)
                         print("node: ", nodeIdentifier, "||", x)
@@ -194,11 +191,11 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
             dx_ds2 = [0.0, 0.0, 0.0]
             dx_ds3 = [0.0, 0.0, 0.0]
             zero = [0.0, 0.0, 0.0]
-            bodyLength = length - width
-            stepLength = length / elementsCountAlong
+            bodyLength = length - width/2 * rfactor
+            stepLength = bodyLength / elementsCountAlong
             stepWidth = width / elementsCountIn
             # since #elements in height is proportional to #elements in length
-            stepHeight = height / elementsCountAlong
+            stepHeight = height / (elementsCountIn+elementsCountAlong)
 
             n3 =0
             count = 0
@@ -211,7 +208,7 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
                     for n1 in range(elementsCountAlong + 1):
                         if n3 + cutGradient <= n2 + n1:
                             x[0] = n1 * stepLength
-                            if x[0] <= length:
+                            if x[0] <= bodyLength:
                                 node = nodes.createNode(nodeIdentifier, nodetemplate)
                                 cache.setNode(node)
 
@@ -226,7 +223,7 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
                                     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
                                     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
 
-                                # print("node: ", nodeIdentifier, "||", x)
+                                print("node: ", nodeIdentifier, "||", x)
                                 count = count + 1
                                 nodeIdentifier = nodeIdentifier + 1
 
@@ -234,7 +231,7 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
                         yCircle = (width / 2) - x[1]
                         xCircle = math.sqrt((width / 2) ** 2 - yCircle ** 2)
 
-                        x[0] = rfactor * xCircle + length
+                        x[0] = rfactor * xCircle + bodyLength
                         node = nodes.createNode(nodeIdentifier, nodetemplate)
                         cache.setNode(node)
 
@@ -249,14 +246,9 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
 
-                        # print("node: ", nodeIdentifier, "||", x)
+                        print("node: ", nodeIdentifier, "||", x)
                         count = count + 1
                         nodeIdentifier = nodeIdentifier + 1
-
-                print("n3: ", n3)
-                print("count: ", count)
-
-
                 n3 += 1
 
 
