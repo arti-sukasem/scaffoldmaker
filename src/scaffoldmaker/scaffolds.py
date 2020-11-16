@@ -36,6 +36,7 @@ from scaffoldmaker.meshtypes.meshtype_3d_Cube_Arti import MeshType_3d_Cube_Arti
 from scaffoldmaker.meshtypes.meshtype_3d_Tube_Arti import MeshType_3d_Tube_Arti
 from scaffoldmaker.meshtypes.meshtype_2d_Tube_Arti import MeshType_2d_Tube_Arti
 from scaffoldmaker.meshtypes.meshtype_2d_lung_Arti import MeshType_2d_Lung_Arti
+from scaffoldmaker.meshtypes.meshtype_3d_left__human_lung import MeshType_3d_left_human_lung
 from scaffoldmaker.meshtypes.meshtype_3d_left_lung_Arti import MeshType_3d_left_lung_Arti
 from scaffoldmaker.meshtypes.meshtype_3d_lungs1 import MeshType_3d_lungs1
 from scaffoldmaker.meshtypes.meshtype_3d_ostium1 import MeshType_3d_ostium1
@@ -87,6 +88,7 @@ class Scaffolds(object):
             MeshType_3d_Cube_Arti,
             MeshType_2d_Tube_Arti,
             MeshType_2d_Lung_Arti,
+            MeshType_3d_left_human_lung,
             MeshType_3d_left_lung_Arti,
             MeshType_3d_Tube_Arti,
             MeshType_3d_lungs1,
