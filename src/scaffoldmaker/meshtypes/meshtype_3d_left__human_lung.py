@@ -162,7 +162,7 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                             print("n1: ", n1)
                             print("n2: ", n2)
                             print("n3: ", n3)
-                            nodeIdentifier = nodeIdentifier + 1
+                            nodeIdentifier += 1
 
                         if n1 == 0 and n2 == 0 and n3 == 2:
                             # at (n1, n2, n3 + 1/2)
