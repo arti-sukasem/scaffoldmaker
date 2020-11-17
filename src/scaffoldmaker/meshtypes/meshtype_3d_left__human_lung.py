@@ -99,13 +99,6 @@ class MeshType_3d_left_human_lung(Scaffold_base):
             nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS2DS3, 1)
             nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D3_DS1DS2DS3, 1)
 
-        mesh = fm.findMeshByDimension(3)
-        tricubichermite = eftfactory_tricubichermite(mesh, useCrossDerivatives)
-        eft = tricubichermite.createEftBasic()
-        elementtemplate = mesh.createElementtemplate()
-        elementtemplate.setElementShapeType(Element.SHAPE_TYPE_CUBE)
-        elementtemplate.defineField(coordinates, -1, eft)
-
         cache = fm.createFieldcache()
 
         #create nodes
@@ -156,14 +149,15 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                             #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
                             #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
 
-                            # print("condition: n2 == elementsCount2-1 and n3 == 1 and n1 == ")
-                            # print("node: ", nodeIdentifier, "||", x)
-                            # print("n1: ", n1)
-                            # print("n2: ", n2)
-                            # print("n3: ", n3)
-
+                            print("condition: n2 == elementsCount2-1 and n3 == 1 and n1 == 0")
+                            print("node: ", nodeIdentifier, "||", x)
+                            print("n1: ", n12)
+                            print("n2: ", n2)
+                            print("n3: ", n3)
+                            #n12 doesn't work!`
                             lNodeIds[n3][n2][n1] = nodeIdentifier
                             nodeIdentifier += 1
+
 
                     x[0] = n1 * stepLength
                     x[1] = n2 * stepWidth
@@ -187,11 +181,12 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                         #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
                         #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
                         #
-                        # print("if (n1 > 0 or n1 < elementsCount1) and n2 == 0 and (n3 > elementsCount3 - 2)")
-                        # print("node: ", nodeIdentifier, "||", x)
-                        # print("n1: ", n1)
-                        # print("n2: ", n2)
-                        # print("n3: ", n3)
+
+                        print("if (n1 > 0 or n1 < elementsCount1) and n2 == 0 and (n3 > elementsCount3 - 2)")
+                        print("node: ", nodeIdentifier, "||", x)
+                        print("n1: ", n1)
+                        print("n2: ", n2)
+                        print("n3: ", n3)
 
                         lNodeIds[n3][n2][n1] = nodeIdentifier
                         nodeIdentifier += 1
@@ -212,11 +207,12 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                         #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
                         #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
                         #
-                        # print("condition: x[0] <= length")
-                        # print("node: ", nodeIdentifier, "||", x)
-                        # print("n1: ", n1)
-                        # print("n2: ", n2)
-                        # print("n3: ", n3)
+
+                        print("condition: x[0] <= length")
+                        print("node: ", nodeIdentifier, "||", x)
+                        print("n1: ", n1)
+                        print("n2: ", n2)
+                        print("n3: ", n3)
 
                         lNodeIds[n3][n2][n1] = nodeIdentifier
                         nodeIdentifier += 1
@@ -241,23 +237,87 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                             #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS3, 1, zero)
                             #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
                             #     coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
-                            #
-                            # print("if n1 == elementsCount1-1 and n2 == elementsCount2 and n3 == 1")
-                            # print("node: ", nodeIdentifier, "||", x)
-                            # print("n1: ", n1)
-                            # print("n2: ", n2)
-                            # print("n3: ", n3)
+
+                            print("if n1 == elementsCount1-1 and n2 == elementsCount2 and n3 == 1")
+                            print("node: ", nodeIdentifier, "||", x)
+                            print("n1: ", n1)
+                            print("n2: ", n2)
+                            print("n3: ", n3)
 
                             lNodeIds[n3][n2][n1] = nodeIdentifier
                             nodeIdentifier += 1
             update += 1
 
-        # Create element
-        elementIdentifier = 1
+        # ----------------------------------------------------------------------------------------
+        #                                   Create element
+        # ----------------------------------------------------------------------------------------
 
+        mesh = fm.findMeshByDimension(3)
+        eftfactory = eftfactory_tricubichermite(mesh, useCrossDerivatives)
+        eftRegular = eftfactory.createEftBasic()
 
+        elementtemplateRegular = mesh.createElementtemplate()
+        elementtemplateRegular.setElementShapeType(Element.SHAPE_TYPE_CUBE)
+        elementtemplateRegular.defineField(coordinates, -1, eftRegular)
+
+        elementtemplateCustom = mesh.createElementtemplate()
+        elementtemplateCustom.setElementShapeType(Element.SHAPE_TYPE_CUBE)
+
+        eft1 = eftfactory.createEftWedgeCollapseXi1AtXi2Zero()
+        eft2 = eftfactory.createEftWedgeCollapseXi1AtXi2One()
+        eft3 = eftfactory.createEftWedgeCollapseXi2AtXi3One()
+        # eft3 = eftfactory.createEftWedgeCollapseXi3AtXi2Zero()
+        # eft4 = eftfactory.createEftWedgeCollapseXi3AtXi2One()
+        # eft5 = eftfactory.createEftWedgeCollapseXi3AtXi1Zero()
+        # eft6 = eftfactory.createEftWedgeCollapseXi2AtXi3One()
+
+        # elementIdentifier = 1
+        # for e3 in range(elementsCount3):
+        #     for e2 in range(elementsCount2):
+        #         for e1 in range(elementsCount1):
+        #             eft = eftRegular
+        #             nodeIdentifiers = [lNodeIds[e3][e2][e1], lNodeIds[e3][e2][e1+1], lNodeIds[e3][e2 + 1][e1], lNodeIds[e3][e2+1][e1+1],
+        #                 lNodeIds[e3+1][e2][e1], lNodeIds[e3+1][e2][e1+1], lNodeIds[e3+1][e2 + 1][e1], lNodeIds[e3+1][e2+1][e1+1]]
+        #             scalefactors = None
+        #
+        #             print("elementIdentifier: ", elementIdentifier, "|| NodeIdentifiers: ", nodeIdentifiers)
+
+                    # if (e3 < elementsCount3 - 1):
+                    #     if (e2 == 0) and (e1 == 0):
+                    #         # Back wedge elements
+                    #         nodeIdentifiers.pop(4)
+                    #         nodeIdentifiers.pop(0)
+                    #         eft = eft1
+                    #         scalefactors = [-1.0]
+                    #     elif (e2 == (elementsCount2 - 1)) and (e1 == 0):
+                    #         # Front wedge elements
+                    #         nodeIdentifiers.pop(6)
+                    #         nodeIdentifiers.pop(2)
+                    #         eft = eft2
+                    # else:
+                    #     if ((e2 == 0) or (e2 == elementsCount2 - 1)) and (e1 == 0):
+                    #         # Top tetrahedron elements
+                    #         continue
+                    #     elif (e2 == 0) and (e1 == 1):
+                    #         # Top back wedge elements
+                    #         nodeIdentifiers.pop(4)
+                    #         nodeIdentifiers.pop(3)
+                    #         eft = eft3
+                    #
+                    # if eft is eftRegular:
+                    #     element = mesh.createElement(elementIdentifier, elementtemplateRegular)
+                    # else:
+                    #     elementtemplateCustom.defineField(coordinates, -1, eft)
+                    #     element = mesh.createElement(elementIdentifier, elementtemplateCustom)
+                    # element.setNodesByIdentifier(eft, nodeIdentifiers)
+                    # if scalefactors:
+                    #     element.setScaleFactors(eft, scalefactors)
+
+                    # elementIdentifier += 1
+
+        annotationGroups = []
         fm.endChange()
-        return []
+        return annotationGroups
 
     @classmethod
     def refineMesh(cls, meshrefinement, options):
