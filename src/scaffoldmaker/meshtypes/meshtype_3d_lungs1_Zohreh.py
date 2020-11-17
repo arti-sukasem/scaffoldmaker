@@ -31,7 +31,7 @@ class MeshType_3d_lungs1_Zohreh(Scaffold_base):
 
     @staticmethod
     def getName():
-        return '3D Lungs 1'
+        return '3D Lungs 1 Zohreh'
 
     @staticmethod
     def getParameterSetNames():
