@@ -13,14 +13,14 @@ from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
 
 
-class MeshType_3d_lung1_Zohreh(Scaffold_base):
+class MeshType_3d_lung1(Scaffold_base):
     '''
-    3D lung scaffold Zohreh.
+    3D lung scaffold.
     '''
 
     @staticmethod
     def getName():
-        return '3D Lung 1 Zohreh'
+        return '3D Lung 1'
 
     @staticmethod
     def getParameterSetNames():
@@ -41,17 +41,6 @@ class MeshType_3d_lung1_Zohreh(Scaffold_base):
         return optionNames
 
     @classmethod
-    def getOptionScaffoldPackage(cls, optionName, scaffoldType, parameterSetName=None):
-        '''
-        :param parameterSetName:  Name of valid parameter set for option Scaffold, or None for default.
-        :return: ScaffoldPackage.
-        '''
-        if parameterSetName:
-            assert parameterSetName in cls.getOptionScaffoldTypeParameterSetNames(optionName, scaffoldType), \
-                'Invalid parameter set ' + str(parameterSetName) + ' for scaffold ' + str(scaffoldType.getName()) + ' in option ' + str(optionName) + ' of scaffold ' + cls.getName()
-        assert False, cls.__name__ + '.getOptionScaffoldPackage:  Option ' + optionName + ' is not a scaffold'
-
-    @classmethod
     def generateBaseMesh(cls, region, options):
         '''
         Generate the base tricubic Hermite mesh. See also generateMesh().
@@ -60,7 +49,6 @@ class MeshType_3d_lung1_Zohreh(Scaffold_base):
         :return: annotationGroups
         '''
         fm = region.getFieldmodule()
-        fm.beginChange()
         coordinates = findOrCreateFieldCoordinates(fm)
 
         nodes = fm.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
@@ -138,13 +126,13 @@ class MeshType_3d_lung1_Zohreh(Scaffold_base):
         leftLungMeshGroup = leftLungGroup.getMeshGroup(mesh)
         rightLungMeshGroup = rightLungGroup.getMeshGroup(mesh)
 
-        eft1 = eftfactory.createEftWedgeCollapseXi1AtXi2Zero()
-        eft2 = eftfactory.createEftWedgeCollapseXi1AtXi2One()
-        eft3 = eftfactory.createEftWedgeCollapseXi2RightAtXi3One()
-        eft4 = eftfactory.createEftWedgeCollapseXi2LeftAtXi3One()
-        eft5 = eftfactory.createEftWedgeCollapseXi1AtXi3One()
-        eft6 = eftfactory.createEftTetrahedronCollapseXi1Xi2AtXi3OneXi1AtXi2Zero()
-        eft7 = eftfactory.createEftTetrahedronCollapseXi1Xi2AtXi3OneXi1AtXi2One()
+        eft1 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi2Plane([1, 5], Xi2=0)
+        eft2 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi2Plane([3, 7], Xi2=1)
+        eft3 = eftfactory.createEftWedgeCollapseXi2QuadrantAtXi3Plane([5, 6], Xi3=1)
+        eft4 = eftfactory.createEftWedgeCollapseXi2QuadrantAtXi3Plane([7, 8], Xi3=1)
+        eft5 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi3Plane([5, 7], Xi3=1)
+        eft6 = eftfactory.createEftTetrahedronCollapseXi1Xi2QuadrantAtXi3One(8, 2)
+        eft7 = eftfactory.createEftTetrahedronCollapseXi1Xi2QuadrantAtXi3One(6, 3)
 
         elementIdentifier = 1
         for e3 in range(elementsCount3):
@@ -224,9 +212,7 @@ class MeshType_3d_lung1_Zohreh(Scaffold_base):
         markerPoint = markerPoints.createNode(nodeIdentifier, markerTemplateInternal)
         nodeIdentifier += 1
         cache.setNode(markerPoint)
-        markerName.assignString(cache, 'APEX')
+        markerName.assignString(cache, 'apex of left lung')
         markerLocation.assignMeshLocation(cache, element1, [1.0, 1.0, 1.0])
 
-        fm.endChange()
         return annotationGroups
-
