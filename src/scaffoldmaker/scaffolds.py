@@ -39,7 +39,7 @@ from scaffoldmaker.meshtypes.meshtype_2d_lung_Arti import MeshType_2d_Lung_Arti
 from scaffoldmaker.meshtypes.meshtype_3d_left__human_lung import MeshType_3d_left_human_lung
 from scaffoldmaker.meshtypes.meshtype_3d_left_lung_Arti import MeshType_3d_left_lung_Arti
 from scaffoldmaker.meshtypes.meshtype_3d_lungs1 import MeshType_3d_lungs1
-from scaffoldmaker.meshtypes.meshtype_3d_lungs1_Zohreh import MeshType_3d_lungs1_Zohreh
+from scaffoldmaker.meshtypes.meshtype_3d_lung1_Zohreh import MeshType_3d_lung1_Zohreh
 from scaffoldmaker.meshtypes.meshtype_3d_ostium1 import MeshType_3d_ostium1
 from scaffoldmaker.meshtypes.meshtype_3d_smallintestine1 import MeshType_3d_smallintestine1
 from scaffoldmaker.meshtypes.meshtype_3d_solidsphere1 import MeshType_3d_solidsphere1
@@ -93,7 +93,7 @@ class Scaffolds(object):
             MeshType_3d_left_lung_Arti,
             MeshType_3d_Tube_Arti,
             MeshType_3d_lungs1,
-            MeshType_3d_lungs1_Zohreh,
+            MeshType_3d_lung1_Zohreh,
             MeshType_3d_ostium1,
             MeshType_3d_smallintestine1,
             MeshType_3d_solidsphere1,
