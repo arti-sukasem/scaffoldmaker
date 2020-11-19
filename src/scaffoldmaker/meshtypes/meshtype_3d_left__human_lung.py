@@ -317,49 +317,62 @@ class MeshType_3d_left_human_lung(Scaffold_base):
             for e2 in range(elementsCount2):
                 for e1 in range(elementsCount1):
                     eft = eftRegular
-                    if (e2 == elementsCount2-1 and e3 == 1):
-                        z = 0
+                    if e2 == elementsCount2-2 and e3 == 1:
+                        nodeIdentifiers = [lNodeIds[e3][e2][e1], lNodeIds[e3][e2][e1 + 1], lNodeIds[e3][e2 + 1][e1],
+                                           lNodeIds[e3][e2 + 1][e1 + 1], lNodeIds[e3 + 1][e2][e1], lNodeIds[e3 + 1][e2][e1 + 1]]
+                    elif e2 == elementsCount2-1 and e3 == 1:
+                        nodeIdentifiers = [lNodeIds[e3][e2][e1], lNodeIds[e3][e2][e1 + 1], lNodeIds[e3][e2 + 1][e1],
+                                           lNodeIds[e3][e2 + 1][e1 + 1],
+                                           lNodeIds[e3 + 1][e2][e1], lNodeIds[e3 + 1][e2][e1 + 1],
+                                           lNodeIds[e3 + 1][e2 - 1][e1], lNodeIds[e3 + 1][e2 - 1][e1 + 1]]
+                    elif e2 == elementsCount2 - update + 1 and e3 == elementsCount3-1:
+                        nodeIdentifiers = [lNodeIds[e3][e2][e1], lNodeIds[e3][e2][e1 + 1], lNodeIds[e3][e2 + 1][e1],
+                                           lNodeIds[e3][e2 + 1][e1 + 1],
+                                           lNodeIds[e3 + 1][e2][e1], lNodeIds[e3 + 1][e2][e1 + 1],
+                                           lNodeIds[e3][e2 + 2][e1], lNodeIds[e3][e2 + 2][e1 + 1]]
                     else:
                         nodeIdentifiers = [lNodeIds[e3][e2][e1], lNodeIds[e3][e2][e1+1], lNodeIds[e3][e2 + 1][e1], lNodeIds[e3][e2+1][e1+1],
                             lNodeIds[e3+1][e2][e1], lNodeIds[e3+1][e2][e1+1], lNodeIds[e3+1][e2 + 1][e1], lNodeIds[e3+1][e2+1][e1+1]]
                     scalefactors = None
 
-                    print("lNodeIds: ", lNodeIds[e3][e2][e1], "|| ", e1, e2, e3)
+                    #Discard all the unused elements
+                    if nodeIdentifiers.count(None) > 3:
+                        continue
 
                     print("elementIdentifier: ", elementIdentifier, "|| NodeIdentifiers: ", nodeIdentifiers)
 
 
+                    if (e3 < elementsCount3 - 1):
+                        if (e2 == 0) and (e1 == 0):
+                            # Back wedge elements
+                            nodeIdentifiers.pop(4)
+                            nodeIdentifiers.pop(0)
+                            eft = eft1
+                            scalefactors = [-1.0]
+                        elif (e2 == (elementsCount2 - 1)) and (e1 == 0):
+                            # Front wedge elements
+                            nodeIdentifiers.pop(6)
+                            nodeIdentifiers.pop(2)
+                            eft = eft2
+                    else:
+                        if ((e2 == 0) or (e2 == elementsCount2 - 1)) and (e1 == 0):
+                            # Top tetrahedron elements
+                            continue
+                        elif (e2 == 0) and (e1 == 1):
+                            # Top back wedge elements
+                            nodeIdentifiers.pop(4)
+                            nodeIdentifiers.pop(3)
+                            eft = eft3
 
-                    # if (e3 < elementsCount3 - 1):
-                    #     if (e2 == 0) and (e1 == 0):
-                    #         # Back wedge elements
-                    #         nodeIdentifiers.pop(4)
-                    #         nodeIdentifiers.pop(0)
-                    #         eft = eft1
-                    #         scalefactors = [-1.0]
-                    #     elif (e2 == (elementsCount2 - 1)) and (e1 == 0):
-                    #         # Front wedge elements
-                    #         nodeIdentifiers.pop(6)
-                    #         nodeIdentifiers.pop(2)
-                    #         eft = eft2
-                    # else:
-                    #     if ((e2 == 0) or (e2 == elementsCount2 - 1)) and (e1 == 0):
-                    #         # Top tetrahedron elements
-                    #         continue
-                    #     elif (e2 == 0) and (e1 == 1):
-                    #         # Top back wedge elements
-                    #         nodeIdentifiers.pop(4)
-                    #         nodeIdentifiers.pop(3)
-                    #         eft = eft3
-                    #
-                    # if eft is eftRegular:
-                    #     element = mesh.createElement(elementIdentifier, elementtemplateRegular)
-                    # else:
-                    #     elementtemplateCustom.defineField(coordinates, -1, eft)
-                    #     element = mesh.createElement(elementIdentifier, elementtemplateCustom)
-                    # element.setNodesByIdentifier(eft, nodeIdentifiers)
-                    # if scalefactors:
-                    #     element.setScaleFactors(eft, scalefactors)
+
+                    if eft is eftRegular:
+                        element = mesh.createElement(elementIdentifier, elementtemplateRegular)
+                    else:
+                        elementtemplateCustom.defineField(coordinates, -1, eft)
+                        element = mesh.createElement(elementIdentifier, elementtemplateCustom)
+                    element.setNodesByIdentifier(eft, nodeIdentifiers)
+                    if scalefactors:
+                        element.setScaleFactors(eft, scalefactors)
 
                     elementIdentifier += 1
 
