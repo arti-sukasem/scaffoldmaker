@@ -6,7 +6,8 @@ from __future__ import division
 import math
 from scaffoldmaker.annotation.annotationgroup import AnnotationGroup
 from scaffoldmaker.annotation.lung_terms import get_lung_term
-from opencmiss.utils.zinc.field import findOrCreateFieldCoordinates
+from opencmiss.utils.zinc.field import findOrCreateFieldCoordinates, findOrCreateFieldGroup, \
+    findOrCreateFieldNodeGroup, findOrCreateFieldStoredMeshLocation, findOrCreateFieldStoredString
 from opencmiss.zinc.element import Element, Elementbasis
 from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
@@ -23,6 +24,13 @@ class MeshType_3d_left_human_lung(Scaffold_base):
     @staticmethod
     def getName():
         return '3D Left Human Lung Arti'
+
+    @staticmethod
+    def getParameterSetNames():
+        return [
+            'Default',
+            'Mouse 1'
+            'Human  1']
 
     @staticmethod
     def getDefaultOptions(cls, parameterSetName='Default'):
@@ -43,13 +51,6 @@ class MeshType_3d_left_human_lung(Scaffold_base):
     @staticmethod
     def getOrderedOptionNames():
         return [
-            'Width',
-            'Length',
-            'Height',
-            'Number of element 1',
-            'Number of element 2',
-            'Number of element 3',
-            'Use cross derivatives',
             'Refine',
             'Refine Element 1',
             'Refine Element 2',
@@ -95,20 +96,23 @@ class MeshType_3d_left_human_lung(Scaffold_base):
         nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D_DS2, 1)
         nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D_DS3, 1)
 
-        if useCrossDerivatives:
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS1DS2, 1)
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS1DS3, 1)
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS2DS3, 1)
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D3_DS1DS2DS3, 1)
-
+        mesh = fm.findMeshByDimension(3)
         cache = fm.createFieldcache()
+
+        # Annotation fiducial point
+        # markerGroup = findOrCreateFieldGroup(fm, "marker")
+        # markerName = findOrCreateFieldStoredString(fm, name="marker_name")
+        # markerLocation = findOrCreateFieldStoredMeshLocation(fm, mesh, name="marker_location")
+        # nodes = fm.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
+        # markerPoints = findOrCreateFieldNodeGroup(markerGroup, nodes).getNodesetGroup()
+        # markerTemplateInternal = nodes.createNodetemplate()
+        # markerTemplateInternal.defineField(markerName)
+        # markerTemplateInternal.defineField(markerLocation)
 
         #create nodes
         nodeIdentifier = 1
         x = [0.0, 0.0, 0.0]
-        dx_ds1 = [1.0, 0.0, 0.0]
-        dx_ds2 = [0.0, 1.0, 0.0]
-        dx_ds3 = [0.0, 0.0, 1.0]
+        dx_ds1 = [0.5, 0.0, 0.0]
         stepLength = length/elementsCount1
         stepWidth = width/elementsCount2
         stepHeight = height/elementsCount3
@@ -123,6 +127,11 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                 x[1] = n2 * stepWidth
                 for n1 in range(elementsCount1+1):
                     lNodeIds[n3][n2].append(None)
+
+                    # General nodes
+                    dx_ds2 = [0.0, 0.25, 0.0]
+                    dx_ds3 = [0.0, 0.0, 0.33]
+
                     if (n1 == 0 or n1 == elementsCount1) and (n2 == 0 or n2 == elementsCount2):
                         continue
                     elif (n2 > elementsCount2-update):
@@ -132,6 +141,11 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                     if n2 == elementsCount2-1 and n3 == 1 and n1 == 0:
                         x[1] = n2*stepWidth - stepWidth/2
                         for n12 in range(elementsCount1+1):
+
+                            # nodeIdentifier == (19 or 20 or 21):
+                            dx_ds2 = [0.0, 0.125, 0.0]
+                            dx_ds3 = [0.0, -0.125, 0.33/2]
+
                             x[0] = n12 * stepLength
                             node = nodes.createNode(nodeIdentifier, nodetemplate)
                             cache.setNode(node)
@@ -140,11 +154,11 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
 
-                            # print("condition: n2 == elementsCount2-1 and n3 == 1 and n1 == 0")
-                            # print("node: ", nodeIdentifier, "||", x)
-                            # print("n1: ", n12)
-                            # print("n2: ", n2)
-                            # print("n3: ", n3)
+                            print("condition: n2 == elementsCount2-1 and n3 == 1 and n1 == 0")
+                            print("node: ", nodeIdentifier, "||", x)
+                            print("n1: ", n12)
+                            print("n2: ", n2)
+                            print("n3: ", n3)
 
                             lNodeIds[n3][n2][n12] = nodeIdentifier
                             lNodeIds[n3][n2].append(None)
@@ -156,17 +170,24 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                             lNodeIds[n3][n2+1].append(None)
                             x[0] = n13 * stepLength
                             x[1] = n2 * stepWidth
+
+                            # nodeIdentifier == (22 or 23 or 24):
+                            dx_ds2 = [0.0, 0.125, 0.0]
+                            dx_ds3 = [0.0, -0.25, 0.33]
+
                             node = nodes.createNode(nodeIdentifier, nodetemplate)
                             cache.setNode(node)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
-                            # print("condition: n2 == elementsCount2-1 and n3 == 1 and n1 == 0")
-                            # print("node: ", nodeIdentifier, "||", x)
-                            # print("n1: ", n1)
-                            # print("n2: ", n2+1)
-                            # print("n3: ", n3)
+
+                            print("condition: n2 == elementsCount2-1 and n3 == 1 and n1 == 0")
+                            print("node: ", nodeIdentifier, "||", x)
+                            print("n1: ", n1)
+                            print("n2: ", n2+1)
+                            print("n3: ", n3)
+
                             lNodeIds[n3][n2+1][n13] = nodeIdentifier
                             nodeIdentifier += 1
                         nodeIdentifier += elementsCount1 + 1
@@ -180,23 +201,54 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                     if (n1 > 0 or n1 < elementsCount1) and n2 == 0 and (n3 > 1):
                         x[2] = n3 * stepHeight + stepHeight / 2
                         node = nodes.createNode(nodeIdentifier, nodetemplate)
+
+                        # Node: 28 35
+                        dx_ds2 = [0.0, 0.25, -0.33/2]
+                        dx_ds3 = [0.0, 0.0, 0.33]
+
                         cache.setNode(node)
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
 
-                        # print("if (n1 > 0 or n1 < elementsCount1) and n2 == 0 and (n3 > elementsCount3 - 2)")
-                        # print("node: ", nodeIdentifier, "||", x)
-                        # print("n1: ", n1)
-                        # print("n2: ", n2)
-                        # print("n3: ", n3)
+                        print("if (n1 > 0 or n1 < elementsCount1) and n2 == 0 and (n3 > elementsCount3 - 2)")
+                        print("node: ", nodeIdentifier, "||", x)
+                        print("n1: ", n1)
+                        print("n2: ", n2)
+                        print("n3: ", n3)
 
                         lNodeIds[n3][n2][n1] = nodeIdentifier
                         nodeIdentifier += 1
                         continue
 
                     if x[0] <= width:
+                        if n2 == elementsCount2 - 2 and n3 == 1:
+                            # nodeIdentifier == (16 or 17 or 18):
+                            dx_ds2 = [0.0, 0.125, 0.0]
+                            dx_ds3 = [0.0, 0.0, 0.33/2]
+                        elif n1 != (0 or elementsCount1) and n2 == 0 and n3 == elementsCount3 - 2:
+                            # nodeIdentifier == 12
+                            dx_ds2 = [0.0, 0.25, 0.0]
+                            dx_ds3 = [0.0, 0.0, 0.33+0.33/2]
+                        elif n2 == elementsCount2-1 and n3 == 0:
+                            # nodeIdentifier == 8 9 10
+                            dx_ds2 = [0.0, 0.25, 0.0]
+                            dx_ds3 = [0.0, -0.125, 0.33]
+                        elif n2 == 1 and n3 == elementsCount3 - 1:
+                            # nodeIdentifier == (29 or 30 or 31):
+                            dx_ds2 = [0.0, 0.25, -0.33/2]
+                            dx_ds3 = [0.0, 0.0, 0.33]
+                        elif n2 == elementsCount2 - 2 and n3 == elementsCount3 - 1:
+                            # nodeIdentifier == (32 or 33 or 34)
+                            dx_ds2 = [0.0, 0.0, 0.0]
+                            dx_ds3 = [0.0, 0.0, 0.0]
+                        elif n2 == 1 and n3 == elementsCount3:
+                            # nodeIdentifier == (36 or 37 or 38):
+                            dx_ds2 = [0.0, 0.25, -0.33]
+                            dx_ds3 = [0.0, 0.00, 0.33]
+
+
                         node = nodes.createNode(nodeIdentifier, nodetemplate)
                         cache.setNode(node)
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
@@ -204,11 +256,11 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
                         coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
 
-                        # print("condition: x[0] <= width")
-                        # print("node: ", nodeIdentifier, "||", x)
-                        # print("n1: ", n1)
-                        # print("n2: ", n2)
-                        # print("n3: ", n3)
+                        print("condition: x[0] <= width")
+                        print("node: ", nodeIdentifier, "||", x)
+                        print("n1: ", n1)
+                        print("n2: ", n2)
+                        print("n3: ", n3)
 
                         lNodeIds[n3][n2][n1] = nodeIdentifier
                         nodeIdentifier += 1
@@ -223,6 +275,10 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                         x[1] = (elementsCount2-2) * stepWidth
                         x[2] = n3 * stepHeight - 0.5 * stepHeight
 
+                        # nodeIdentifier == 25 26 27
+                        dx_ds2 = [0.0, 0.0, 0.0]
+                        dx_ds3 = [0.0, 0.0, 0.0]
+
                         for n12 in range(elementsCount1 + 1):
                             x[0] = n12 * stepLength
                             node = nodes.createNode(nodeIdentifier_temp, nodetemplate)
@@ -232,11 +288,11 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
                             coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
 
-                            # print("if n1 == elementsCount1 and n2 == elementsCount2-update and n3 == 2")
-                            # print("nodeIdentifier_temp: ", nodeIdentifier_temp, "||", x)
-                            # print("n1: ", n12)
-                            # print("n2: ", n2)
-                            # print("n3: ", n3)
+                            print("if n1 == elementsCount1 and n2 == elementsCount2-update and n3 == 2")
+                            print("nodeIdentifier_temp: ", nodeIdentifier_temp, "||", x)
+                            print("n1: ", n12)
+                            print("n2: ", n2)
+                            print("n3: ", n3)
 
                             lNodeIds[n3][n2][n12] = nodeIdentifier_temp
                             nodeIdentifier_temp += 1
@@ -247,7 +303,6 @@ class MeshType_3d_left_human_lung(Scaffold_base):
         #                                   Create element
         # ----------------------------------------------------------------------------------------
 
-        mesh = fm.findMeshByDimension(3)
         eftfactory = eftfactory_tricubichermite(mesh, useCrossDerivatives)
         eftRegular = eftfactory.createEftBasic()
 
@@ -267,14 +322,11 @@ class MeshType_3d_left_human_lung(Scaffold_base):
         leftLungMeshGroup = leftLungGroup.getMeshGroup(mesh)
         lowerLobeLeftLungMeshGroup = lowerLobeLeftLungGroup.getMeshGroup(mesh)
 
-        eft1 = eftfactory.createEftWedgeCollapseXi1AtXi2Zero()
-        eft2 = eftfactory.createEftWedgeCollapseXi1AtXi2One()
-        eft3 = eftfactory.createEftWedgeCollapseXi2RightAtXi3One()
-        eft4 = eftfactory.createEftWedgeCollapseXi2LeftAtXi3One()
-        eft5 = eftfactory.createEftWedgeCollapseXi1AtXi3One()
-        eft6 = eftfactory.createEftTetrahedronCollapseXi1Xi2AtXi3OneXi1AtXi2Zero()
-        eft7 = eftfactory.createEftTetrahedronCollapseXi1Xi2AtXi3OneXi1AtXi2One()
-
+        eft1 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi2Plane([1, 5], Xi2=0)
+        eft4 = eftfactory.createEftWedgeCollapseXi2QuadrantAtXi3Plane([7, 8], Xi3=1)
+        eft8 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi2Plane([2, 6], Xi2=0)
+        eft9 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi2Plane([2, 6], Xi2=0)
+        eft10 = eftfactory.createEftWedgeCollapseXi1QuadrantAtXi2Plane([2, 6], Xi2=0)
 
         elementIdentifier = 1
         for e3 in range(elementsCount3):
@@ -316,7 +368,10 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                         continue
                     elif nodeIdentifiers.count(None) == 2:
                         # Wedge element type
-                        eft = eft1
+                        if e1 == 0 and e2 == 0:
+                            eft = eft1
+                        else:
+                            eft = eft8
                     elif nodeIdentifiers.count(None) == 1:
                         # Tetrahedral element type
                         continue
@@ -324,7 +379,7 @@ class MeshType_3d_left_human_lung(Scaffold_base):
                     # Remove None from the list
                     nodeIdentifiers = list(filter(None.__ne__, nodeIdentifiers))
 
-                    print("elementIdentifier: ", elementIdentifier, "|| NodeIdentifiers: ", nodeIdentifiers)
+                    # print("elementIdentifier: ", elementIdentifier, "|| NodeIdentifiers: ", nodeIdentifiers)
 
                     # Forming an element and annotating the elements
                     if eft is eftRegular:

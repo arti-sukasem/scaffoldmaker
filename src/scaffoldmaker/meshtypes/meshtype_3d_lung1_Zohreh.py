@@ -13,14 +13,14 @@ from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
 
 
-class MeshType_3d_lung1(Scaffold_base):
+class MeshType_3d_lung1_Zohreh(Scaffold_base):
     '''
     3D lung scaffold.
     '''
 
     @staticmethod
     def getName():
-        return '3D Lung 1'
+        return '3D Lung 1 Zohreh'
 
     @staticmethod
     def getParameterSetNames():
