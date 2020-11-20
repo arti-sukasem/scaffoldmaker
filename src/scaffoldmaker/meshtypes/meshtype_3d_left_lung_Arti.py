@@ -1,104 +1,63 @@
-"""
-Generates a 3-D unit box mesh with variable numbers of elements in 3 directions.
-"""
+'''
+Generates 3D lung surface mesh.
+'''
 
-from __future__ import division
-import math
-from opencmiss.utils.zinc.field import findOrCreateFieldCoordinates
-from opencmiss.zinc.element import Element, Elementbasis
-from opencmiss.zinc.field import Field
-from opencmiss.zinc.node import Node
+from scaffoldmaker.annotation.annotationgroup import AnnotationGroup
+from scaffoldmaker.annotation.lung_terms import get_lung_term
 from scaffoldmaker.meshtypes.scaffold_base import Scaffold_base
 from scaffoldmaker.utils.eftfactory_tricubichermite import eftfactory_tricubichermite
-from scaffoldmaker.utils.meshrefinement import MeshRefinement
+from opencmiss.utils.zinc.field import findOrCreateFieldCoordinates, findOrCreateFieldGroup, \
+    findOrCreateFieldNodeGroup, findOrCreateFieldStoredMeshLocation, findOrCreateFieldStoredString
+from opencmiss.zinc.element import Element
+from opencmiss.zinc.field import Field
+from opencmiss.zinc.node import Node
 
 
-class MeshType_3d_left_lung_Arti(Scaffold_base):
+class MeshType_3d_lung1(Scaffold_base):
     '''
-    classdocs
+    3D lung scaffold.
     '''
 
     @staticmethod
     def getName():
-        return '3D Left Lung Arti'
+        return '3D Lung 1'
 
     @staticmethod
+    def getParameterSetNames():
+        return [
+            'Default',
+            'Human 1',
+            'Mouse 1']
+
+    @classmethod
     def getDefaultOptions(cls, parameterSetName='Default'):
-        return {
-            'Width': 0.25,
-            'Length': 1.0,
-            'Height': 1.0,
-            'Radius factor': 0.5,
-            'Number of element (base width)': 2,
-            'Number of element (base length)': 4,
-            # 'Number of element (height)': 4,
-            'Use cross derivatives': False,
-            'Cut from the corner': False,
-            'Depth': 0,
-            'Refine': False,
-            'Refine Element in Width': 1,
-            'Refine Element in Length': 1,
-            'Refine Element in Height': 1,
-        }
+        options = {}
+        if parameterSetName == 'Default':
+            parameterSetName = 'Mouse 1'
+        options['Base parameter set'] = parameterSetName
+
+        return options
 
     @staticmethod
     def getOrderedOptionNames():
-        return [
-            'Width',
-            'Length',
-            'Height',
-            'Radius factor',
-            'Number of element (base width)',
-            'Number of element (base length)',
-            # 'Number of element (height)',
-            'Use cross derivatives',
-            'Cut from the corner',
-            'Depth',
-            'Refine',
-            'Refine Element in Width',
-            'Refine Element in Length',
-            'Refine Element in Height'
-        ]
-
-    @staticmethod
-    def checkOptions(options):
-        if (options['Width'] < 0):
-            options['Width'] = 1.0
-        if (options['Length'] < 0):
-            options['Length'] = 1.0
-        if (options['Height'] < 0):
-            options['Height'] = 1.0
-        if (options['Radius factor'] < 0):
-            options['Radius factor'] = 1.0
-        if (options['Number of element (base width)'] < 2):
-            options['Number of element (base width)'] = 2
-        if (options['Number of element (base length)'] < 1):
-            options['Number of element (base length)'] = 1
-        if (options['Depth'] < 0):
-            options['Depth'] = 0
-        # if (options['Number of element (base height)'] < 1):
-        #     options['Number of element (base height)'] = 1
+        optionNames = []
+        return optionNames
 
     @classmethod
     def generateBaseMesh(cls, region, options):
-        """
+        '''
+        Generate the base tricubic Hermite mesh. See also generateMesh().
         :param region: Zinc region to define model in. Must be empty.
         :param options: Dict containing options. See getDefaultOptions().
-        :return: [] empty list of AnnotationGroup
-        """
-        width = options['Width']
-        length = options['Length']
-        height = options['Height']
-        rfactor = options['Radius factor']
-        elementsCountAlong = options['Number of element (base length)']
-        elementsCountIn = options['Number of element (base width)']
-        useCrossDerivatives = options['Use cross derivatives']
-        cutAngle = options['Cut from the corner']
-        cutGradient = options['Depth']
+        :return: annotationGroups
+        '''
+        parameterSetName = options['Base parameter set']
+        isMouse = 'Mouse' in parameterSetName
+        isHuman = 'Human' in parameterSetName
 
         fm = region.getFieldmodule()
-        fm.beginChange()
         coordinates = findOrCreateFieldCoordinates(fm)
+
         nodes = fm.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
         nodetemplate = nodes.createNodetemplate()
         nodetemplate.defineField(coordinates)
@@ -107,155 +66,167 @@ class MeshType_3d_left_lung_Arti(Scaffold_base):
         nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D_DS2, 1)
         nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D_DS3, 1)
 
-        if useCrossDerivatives:
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS1DS2, 1)
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS1DS3, 1)
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D2_DS2DS3, 1)
-            nodetemplate.setValueNumberOfVersions(coordinates, -1, Node.VALUE_LABEL_D3_DS1DS2DS3, 1)
-
         mesh = fm.findMeshByDimension(3)
-        tricubichermite = eftfactory_tricubichermite(mesh, useCrossDerivatives)
-        eft = tricubichermite.createEftBasic()
-        elementtemplate = mesh.createElementtemplate()
-        elementtemplate.setElementShapeType(Element.SHAPE_TYPE_CUBE)
-        elementtemplate.defineField(coordinates, -1, eft)
+
+        eftfactory = eftfactory_tricubichermite(mesh, None)
+        eftRegular = eftfactory.createEftBasic()
+
+        elementtemplateRegular = mesh.createElementtemplate()
+        elementtemplateRegular.setElementShapeType(Element.SHAPE_TYPE_CUBE)
+        elementtemplateRegular.defineField(coordinates, -1, eftRegular)
+
+        elementtemplateCustom = mesh.createElementtemplate()
+        elementtemplateCustom.setElementShapeType(Element.SHAPE_TYPE_CUBE)
+
+        lungGroup = AnnotationGroup(region, get_lung_term("lung"))
+        leftLungGroup = AnnotationGroup(region, get_lung_term("left lung"))
+        rightLungGroup = AnnotationGroup(region, get_lung_term("right lung"))
+        annotationGroups = [leftLungGroup, rightLungGroup, lungGroup]
+
+        lungMeshGroup = lungGroup.getMeshGroup(mesh)
+        leftLungMeshGroup = leftLungGroup.getMeshGroup(mesh)
+        rightLungMeshGroup = rightLungGroup.getMeshGroup(mesh)
+
+
+        # Annotation fiducial point
+        markerGroup = findOrCreateFieldGroup(fm, "marker")
+        markerName = findOrCreateFieldStoredString(fm, name="marker_name")
+        markerLocation = findOrCreateFieldStoredMeshLocation(fm, mesh, name="marker_location")
+
+        nodes = fm.findNodesetByFieldDomainType(Field.DOMAIN_TYPE_NODES)
+        markerPoints = findOrCreateFieldNodeGroup(markerGroup, nodes).getNodesetGroup()
+        markerTemplateInternal = nodes.createNodetemplate()
+        markerTemplateInternal.defineField(markerName)
+        markerTemplateInternal.defineField(markerLocation)
 
         cache = fm.createFieldcache()
 
+        if isHuman:
+            print('Human!')
 
-        #create nodes
-        if cutAngle != True:
+        elif isMouse:
+            elementsCount1 = 2
+            elementsCount2 = 4
+            elementsCount3 = 4
+
+            # Create nodes
             nodeIdentifier = 1
-            x = [0.0, 0.0, 0.0]
-            dx_ds1 = [0.0, 0.0, 0.0]
-            dx_ds2 = [0.0, 0.0, 0.0]
-            dx_ds3 = [0.0, 0.0, 0.0]
-            zero = [0.0, 0.0, 0.0]
-            bodyLength = length - width/2 * rfactor
-            stepLength = bodyLength/elementsCountAlong
-            stepWidth = width/elementsCountIn
-            # since #elements in height is proportional to #elements in length
-            stepHeight = height/(elementsCountAlong+1)
-
-            for n3 in range(elementsCountAlong+2):
-                x[2] = n3 * stepHeight
-                for n2 in range(elementsCountIn+1):
-                    x[1] = n2 * stepWidth
-                    for n1 in range(elementsCountAlong+1):
-                        x[0] = (n3 * stepLength + n1 * stepLength)
-
-                        if x[0] <= bodyLength:
-                            node = nodes.createNode(nodeIdentifier, nodetemplate)
-                            cache.setNode(node)
-
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
-
-                            if useCrossDerivatives:
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS2, 1, zero)
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS3, 1, zero)
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
-
-                            nodeIdentifier = nodeIdentifier + 1
-
-                    if n2 > 0 and n2 < elementsCountIn:
-                        yCircle = (width / 2) - x[1]
-                        xCircle = math.sqrt((width/2)**2 - yCircle**2)
-
-                        x[0] = rfactor * xCircle + bodyLength
-                        print("n2: ", n2)
-                        print("bodylength: ", bodyLength)
-                        print("node: ", nodeIdentifier, "||", x)
+            lNodeIds = []
+            d1 = [0.5, 0.0, 0.0]
+            d2 = [0.0, 0.5, 0.0]
+            d3 = [0.0, 0.0, 1.0]
+            for n3 in range(elementsCount3 + 1):
+                lNodeIds.append([])
+                for n2 in range(elementsCount2 + 1):
+                    lNodeIds[n3].append([])
+                    for n1 in range(elementsCount1 + 1):
+                        lNodeIds[n3][n2].append([])
+                        if n3 < elementsCount3:
+                            if (n1 == 0) and ((n2 == 0) or (n2 == elementsCount2)):
+                                continue
+                        else:
+                            if (n2 == 0) or (n2 == elementsCount2) or (n1 == 0):
+                                continue
                         node = nodes.createNode(nodeIdentifier, nodetemplate)
                         cache.setNode(node)
+                        x = [0.5 * (n1 - 1), 0.5 * (n2 - 1), 1.0 * n3]
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, x)
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS1, 1, d1)
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS2, 1, d2)
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS3, 1, d3)
+                        lNodeIds[n3][n2][n1] = nodeIdentifier
+                        nodeIdentifier += 1
 
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
+            # Create elements
 
-                        if useCrossDerivatives:
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS2, 1, zero)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS3, 1, zero)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
+            eft1 = eftfactory.createEftWedgeCollapseXi1Quadrant([1, 5])
+            eft2 = eftfactory.createEftWedgeCollapseXi1Quadrant([3, 7])
+            eft3 = eftfactory.createEftWedgeCollapseXi2Quadrant([5, 6])
+            eft4 = eftfactory.createEftWedgeCollapseXi2Quadrant([7, 8])
+            eft5 = eftfactory.createEftWedgeCollapseXi1Quadrant([5, 7])
+            eft6 = eftfactory.createEftTetrahedronCollapseXi1Xi2Quadrant(8, 2)
+            eft7 = eftfactory.createEftTetrahedronCollapseXi1Xi2Quadrant(6, 3)
 
-                        nodeIdentifier = nodeIdentifier + 1
-        else:
-            nodeIdentifier = 1
-            x = [0.0, 0.0, 0.0]
-            dx_ds1 = [0.0, 0.0, 0.0]
-            dx_ds2 = [0.0, 0.0, 0.0]
-            dx_ds3 = [0.0, 0.0, 0.0]
-            zero = [0.0, 0.0, 0.0]
-            bodyLength = length - width/2 * rfactor
-            stepLength = bodyLength / elementsCountAlong
-            stepWidth = width / elementsCountIn
-            # since #elements in height is proportional to #elements in length
-            stepHeight = height / (elementsCountIn+elementsCountAlong)
+            elementIdentifier = 1
+            for e3 in range(elementsCount3):
+                for e2 in range(elementsCount2):
+                    for e1 in range(elementsCount1):
+                        eft = eftRegular
+                        nodeIdentifiers = [
+                            lNodeIds[e3    ][e2][e1], lNodeIds[e3    ][e2][e1 + 1], lNodeIds[e3    ][e2 + 1][e1], lNodeIds[e3    ][e2 + 1][e1 + 1],
+                            lNodeIds[e3 + 1][e2][e1], lNodeIds[e3 + 1][e2][e1 + 1], lNodeIds[e3 + 1][e2 + 1][e1], lNodeIds[e3 + 1][e2 + 1][e1 + 1]]
+                        scalefactors = None
+                        if (e3 < elementsCount3 - 1):
+                            if (e2 == 0) and (e1 == 0):
+                                # Back wedge elements
+                                nodeIdentifiers.pop(4)
+                                nodeIdentifiers.pop(0)
+                                eft = eft1
+                                scalefactors = [-1.0]
+                            elif (e2 == elementsCount2 - 1) and (e1 == 0):
+                                # Front wedge elements
+                                nodeIdentifiers.pop(6)
+                                nodeIdentifiers.pop(2)
+                                eft = eft2
+                        else:
+                            if (e2 == 0) and (e1 == 1):
+                                # Top back wedge elements
+                                nodeIdentifiers.pop(5)
+                                nodeIdentifiers.pop(4)
+                                eft = eft3
+                            elif (e2 == elementsCount2 - 1) and (e1 == 1):
+                                # Top front wedge elements
+                                nodeIdentifiers.pop(7)
+                                nodeIdentifiers.pop(6)
+                                eft = eft4
+                                scalefactors = [-1.0]
+                            elif (e2 == 1) and (e1 == 0):
+                                # Top middle back wedge element
+                                nodeIdentifiers.pop(6)
+                                nodeIdentifiers.pop(4)
+                                eft = eft5
+                            elif (e2 == 2) and (e1 == 0):
+                                # Top middle front wedge element
+                                nodeIdentifiers.pop(6)
+                                nodeIdentifiers.pop(4)
+                                eft = eft5
+                            if (e2 == 0) and (e1 == 0):
+                                # Top back tetrahedron element
+                                nodeIdentifiers.pop(6)
+                                nodeIdentifiers.pop(5)
+                                nodeIdentifiers.pop(4)
+                                nodeIdentifiers.pop(0)
+                                eft = eft6
+                                scalefactors = [-1.0]
+                            if (e2 == elementsCount2 - 1) and (e1 == 0):
+                                # Top front tetrahedron element
+                                nodeIdentifiers.pop(7)
+                                nodeIdentifiers.pop(6)
+                                nodeIdentifiers.pop(4)
+                                nodeIdentifiers.pop(2)
+                                eft = eft7
+                                scalefactors = [-1.0]
 
-            n3 =0
-            count = 0
+                        if eft is eftRegular:
+                            element = mesh.createElement(elementIdentifier, elementtemplateRegular)
+                        else:
+                            elementtemplateCustom.defineField(coordinates, -1, eft)
+                            element = mesh.createElement(elementIdentifier, elementtemplateCustom)
+                        element.setNodesByIdentifier(eft, nodeIdentifiers)
+                        if eft.getNumberOfLocalScaleFactors() == 1:
+                            element.setScaleFactors(eft, [-1.0])
+                        elementIdentifier += 1
+                        leftLungMeshGroup.addElement(element)
+                        lungMeshGroup.addElement(element)
 
-            while count != 2:
-                count = 0
-                x[2] = n3 * stepHeight
-                for n2 in range(elementsCountIn + 1):
-                    x[1] = n2 * stepWidth
-                    for n1 in range(elementsCountAlong + 1):
-                        if n3 + cutGradient <= n2 + n1:
-                            x[0] = n1 * stepLength
-                            if x[0] <= bodyLength:
-                                node = nodes.createNode(nodeIdentifier, nodetemplate)
-                                cache.setNode(node)
+            # Apex annotation point
+            idx = elementsCount1 * elementsCount2 * (elementsCount3 - 1) + elementsCount1 * (elementsCount2 // 2)
+            element1 = mesh.findElementByIdentifier(idx)
+            markerPoint = markerPoints.createNode(nodeIdentifier, markerTemplateInternal)
+            nodeIdentifier += 1
+            cache.setNode(markerPoint)
+            markerName.assignString(cache, 'apex of left lung')
+            markerLocation.assignMeshLocation(cache, element1, [1.0, 1.0, 1.0])
 
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
-                                coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
+        return annotationGroups
 
-                                if useCrossDerivatives:
-                                    coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS2, 1, zero)
-                                    coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS3, 1, zero)
-                                    coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
-                                    coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
-
-                                print("node: ", nodeIdentifier, "||", x)
-                                count = count + 1
-                                nodeIdentifier = nodeIdentifier + 1
-
-                    if n2 > 0 and n2 < elementsCountIn and n3 + cutGradient <= n2 + n1 +1:
-                        yCircle = (width / 2) - x[1]
-                        xCircle = math.sqrt((width / 2) ** 2 - yCircle ** 2)
-
-                        x[0] = rfactor * xCircle + bodyLength
-                        node = nodes.createNode(nodeIdentifier, nodetemplate)
-                        cache.setNode(node)
-
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_VALUE, 1, x)
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS1, 1, dx_ds1)
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS2, 1, dx_ds2)
-                        coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D_DS3, 1, dx_ds3)
-
-                        if useCrossDerivatives:
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS2, 1, zero)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS1DS3, 1, zero)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D2_DS2DS3, 1, zero)
-                            coordinates.setNodeParameters(cache, -1, node.VALUE_LABEL_D3_DS1DS2DS3, 1, zero)
-
-                        print("node: ", nodeIdentifier, "||", x)
-                        count = count + 1
-                        nodeIdentifier = nodeIdentifier + 1
-                n3 += 1
-
-
-
-        #create element
-        elementIdentifier = 1
-
-
-        fm.endChange()
-        return []
