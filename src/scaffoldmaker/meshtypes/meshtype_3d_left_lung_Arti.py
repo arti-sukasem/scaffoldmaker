@@ -80,10 +80,12 @@ class MeshType_3d_lung1(Scaffold_base):
 
         lungGroup = AnnotationGroup(region, get_lung_term("lung"))
         leftLungGroup = AnnotationGroup(region, get_lung_term("left lung"))
+        lowerLeftLungGroup = AnnotationGroup(region, get_lung_term("lower lobe of left lung"))
         rightLungGroup = AnnotationGroup(region, get_lung_term("right lung"))
         annotationGroups = [leftLungGroup, rightLungGroup, lungGroup]
 
         lungMeshGroup = lungGroup.getMeshGroup(mesh)
+        lowerLeftLungNMeshGroup = lowerLeftLungGroup.getMeshGroup(mesh)
         leftLungMeshGroup = leftLungGroup.getMeshGroup(mesh)
         rightLungMeshGroup = rightLungGroup.getMeshGroup(mesh)
 
@@ -102,7 +104,110 @@ class MeshType_3d_lung1(Scaffold_base):
         cache = fm.createFieldcache()
 
         if isHuman:
-            print('Human!')
+            elementsCount1 = 2
+            elementsCount2 = 4
+            elementsCount3 = 3
+
+            # Create nodes
+            nodeIdentifier = 1
+            lNodeIds = []
+            d1 = [1.0, 0.0, 0.0]
+            d2 = [0.0, 1.0, 0.0]
+            d3 = [0.0, 0.0, 1.0]
+
+            for n3 in range(elementsCount3 + 1):
+                lNodeIds.append([])
+                for n2 in range(elementsCount2 + 1):
+                    lNodeIds[n3].append([])
+                    for n1 in range(elementsCount1 + 1):
+                        lNodeIds[n3][n2].append([])
+                        if (n1 == 0 or n1 == elementsCount1) and (n2 == 0 or n2 == elementsCount2):
+                            continue
+                        elif n3 < 2 and n2 > 2:
+                            continue
+
+                        node = nodes.createNode(nodeIdentifier, nodetemplate)
+                        cache.setNode(node)
+                        x = [1.0 * (n1 - 1), 1.0 * (n2 - 1), 1.0 * n3]
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_VALUE, 1, x)
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS1, 1, d1)
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS2, 1, d2)
+                        coordinates.setNodeParameters(cache, -1, Node.VALUE_LABEL_D_DS3, 1, d3)
+                        lNodeIds[n3][n2][n1] = nodeIdentifier
+                        nodeIdentifier += 1
+
+            x = 3
+            # Create element
+            eft1 = eftfactory.createEftWedgeCollapseXi1Quadrant([1, 5])
+            eft2 = eftfactory.createEftWedgeCollapseXi1Quadrant([2, 6])
+            eft3 = eftfactory.createEftWedgeCollapseXi2Quadrant([3, 4])
+            eft4 = eftfactory.createEftWedgeCollapseXi1Quadrant([3, 7])
+            eft5 = eftfactory.createEftWedgeCollapseXi1Quadrant([4, 8])
+
+            elementIdentifier = 1
+            for e3 in range(elementsCount3):
+                for e2 in range(elementsCount2):
+                    for e1 in range(elementsCount1):
+                        eft = eftRegular
+                        nodeIdentifiers = [
+                            lNodeIds[e3    ][e2][e1], lNodeIds[e3    ][e2][e1 + 1], lNodeIds[e3    ][e2 + 1][e1], lNodeIds[e3    ][e2 + 1][e1 + 1],
+                            lNodeIds[e3 + 1][e2][e1], lNodeIds[e3 + 1][e2][e1 + 1], lNodeIds[e3 + 1][e2 + 1][e1], lNodeIds[e3 + 1][e2 + 1][e1 + 1]]
+                        scalefactors = None
+                        if nodeIdentifiers.count([]) > 4:
+                            continue
+                        elif (e2 == 0) and (e1 == 0):
+                            # Back wedge elements
+                            nodeIdentifiers.pop(4)
+                            nodeIdentifiers.pop(0)
+                            eft = eft1
+                        elif (e2 == 0) and (e1 == elementsCount1-1):
+                            # Back wedge elements
+                            nodeIdentifiers.pop(5)
+                            nodeIdentifiers.pop(1)
+                            eft = eft2
+                        elif e3 == 1 and e2 == 2:
+                            # Small wedge in the middle
+                            nodeIdentifiers.pop(3)
+                            nodeIdentifiers.pop(2)
+                            eft = eft3
+                        elif e2 == elementsCount2-2 and e3 == 0 and e1 == 0:
+                            # Big wedge in the middle
+                            nodeIdentifiers[2] = nodeIdentifiers[3] = lNodeIds[elementsCount3-1][elementsCount2][1]
+                            nodeIdentifiers[6] = lNodeIds[elementsCount3-1][elementsCount2-1][0]
+                            nodeIdentifiers[7] = lNodeIds[elementsCount3-1][elementsCount2-1][1]
+                            # eft = eft6
+                            print('#elementIdentifier: ', elementIdentifier, '|| ', nodeIdentifiers)
+                        elif e2 == elementsCount2-2 and e3 == 0 and e1 == elementsCount1-1:
+                            # Big wedge in the middle
+                            nodeIdentifiers[2] = nodeIdentifiers[3] = lNodeIds[elementsCount3-1][elementsCount2][1]
+                            nodeIdentifiers[6] = lNodeIds[elementsCount3-1][elementsCount2-1][elementsCount1-1]
+                            nodeIdentifiers[7] = lNodeIds[elementsCount3-1][elementsCount2-1][elementsCount1]
+                            # eft = eft6
+                            print('##elementIdentifier: ', elementIdentifier, '|| ', nodeIdentifiers)
+                        elif e3 == elementsCount3 - 1 and e2 == elementsCount2 - 1 and e1 == 0:
+                            # Wedge at the top end
+                            nodeIdentifiers.pop(6)
+                            nodeIdentifiers.pop(2)
+                            eft = eft4
+                        elif e3 == elementsCount3 - 1 and e2 == elementsCount2 - 1 and e1 == 1:
+                            # Wedge at the top end
+                            nodeIdentifiers.pop(7)
+                            nodeIdentifiers.pop(3)
+                            eft = eft5
+
+                        print('elementIdentifier: ', elementIdentifier, '|| ', nodeIdentifiers)
+                        if eft is eftRegular:
+                            element = mesh.createElement(elementIdentifier, elementtemplateRegular)
+                        else:
+                            elementtemplateCustom.defineField(coordinates, -1, eft)
+                            element = mesh.createElement(elementIdentifier, elementtemplateCustom)
+                        element.setNodesByIdentifier(eft, nodeIdentifiers)
+                        if eft.getNumberOfLocalScaleFactors() == 1:
+                            element.setScaleFactors(eft, [-1.0])
+                        elementIdentifier += 1
+                        leftLungMeshGroup.addElement(element)
+                        lungMeshGroup.addElement(element)
+                        lowerLeftLungNMeshGroup.addElement(element)
 
         elif isMouse:
             elementsCount1 = 2
@@ -156,6 +261,7 @@ class MeshType_3d_lung1(Scaffold_base):
                             lNodeIds[e3    ][e2][e1], lNodeIds[e3    ][e2][e1 + 1], lNodeIds[e3    ][e2 + 1][e1], lNodeIds[e3    ][e2 + 1][e1 + 1],
                             lNodeIds[e3 + 1][e2][e1], lNodeIds[e3 + 1][e2][e1 + 1], lNodeIds[e3 + 1][e2 + 1][e1], lNodeIds[e3 + 1][e2 + 1][e1 + 1]]
                         scalefactors = None
+
                         if (e3 < elementsCount3 - 1):
                             if (e2 == 0) and (e1 == 0):
                                 # Back wedge elements
@@ -206,6 +312,8 @@ class MeshType_3d_lung1(Scaffold_base):
                                 nodeIdentifiers.pop(2)
                                 eft = eft7
                                 scalefactors = [-1.0]
+
+
 
                         if eft is eftRegular:
                             element = mesh.createElement(elementIdentifier, elementtemplateRegular)
