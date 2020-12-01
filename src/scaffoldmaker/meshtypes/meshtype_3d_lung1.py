@@ -13,6 +13,7 @@ from opencmiss.utils.zinc.field import findOrCreateFieldCoordinates, findOrCreat
 from opencmiss.zinc.element import Element
 from opencmiss.zinc.field import Field
 from opencmiss.zinc.node import Node
+from scaffoldmaker.meshtypes.meshtype_1d_path1 import MeshType_1d_path1, extractPathParametersFromRegion
 
 
 class MeshType_3d_lung1(Scaffold_base):
@@ -575,3 +576,20 @@ class MeshType_3d_lung1(Scaffold_base):
         assert isinstance(meshrefinement, MeshRefinement)
         refineElementsCount = options['Refine number of elements']
         meshrefinement.refineAllElementsCubeStandard3d(refineElementsCount, refineElementsCount, refineElementsCount)
+
+    @classmethod
+    def printNodes(cls, region, valueLabels, editGroupName = None):
+        valueLabels = [Node.VALUE_LABEL_VALUE, Node.VALUE_LABEL_D_DS1, Node.VALUE_LABEL_D_DS2,  Node.VALUE_LABEL_D_DS3]
+        x, d1, d2, d3 = extractPathParametersFromRegion(region, valueLabels)
+        for i in range(len(x)):
+            print(i+1, '[', x[i], ',', d1[i], ',', d2[i], ',', d3[i], '],')
+        return False, True
+
+    @classmethod
+    def getInteractiveFunctions(cls):
+        """
+        Supply client with functions for smoothing path parameters.
+        """
+        return [
+            ("Print nodes", lambda region, valueLabels, editGroupName: cls.printNodes(region, valueLabels))
+        ]
