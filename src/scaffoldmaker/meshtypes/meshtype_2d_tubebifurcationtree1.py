@@ -450,9 +450,11 @@ class MeshType_2d_tubebifurcationtree1(Scaffold_base):
                             bni2 = ((bni1 + 1) % (elementsCountAroundRoot * (e2 + 1))) + (elementsCountAroundRoot * e2)
                         bni3 = bni1 + elementsCountAroundRoot
                         bni4 = bni2 + elementsCountAroundRoot
+
+                        # First bifurcation
                         if (0 < e4 < (generationCount-2)) and (e2 == 0):
-                            bni3 = ((bni3 + 1) % elementsCountAroundRoot) + elementsCountAroundRoot
-                            bni4 = ((bni4 + 1) % elementsCountAroundRoot) + elementsCountAroundRoot
+                            bni3 = ((bni3 + (elementsCountAroundRoot//4)) % elementsCountAroundRoot) + elementsCountAroundRoot
+                            bni4 = ((bni4 + (elementsCountAroundRoot//4)) % elementsCountAroundRoot) + elementsCountAroundRoot
 
                         nodeIdentifiers = [stemNodeId[e4][e3][bni1], stemNodeId[e4][e3][bni2],
                                            stemNodeId[e4][e3][bni3], stemNodeId[e4][e3][bni4]]
@@ -478,7 +480,7 @@ class MeshType_2d_tubebifurcationtree1(Scaffold_base):
                                                                               useCrossDerivatives)
                     else:
                         # Bifurcation for no root node
-                        PaIndex = -1 if (1 < e4 < (generationCount - 1)) else paStartIndex[e4][e3]
+                        PaIndex = -elementsCountAroundRoot//4 if (1 < e4 < (generationCount - 1)) else paStartIndex[e4][e3]
                         elementIdentifier = make_tube_bifurcation_elements_2d(region, coordinates, elementIdentifier,
                                                                           paNodeId[e4][e3], PaIndex, c2NodeId[e4][e3],
                                                                           c2StartIndex[e4][e3], c1NodeId[e4][e3], c1StartIndex[e4][e3],
