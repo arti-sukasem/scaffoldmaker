@@ -285,8 +285,8 @@ class MeshType_2d_tubebifurcationtree1(Scaffold_base):
                 if missingRight[j][k] or missingLeft[j][k]:
                     side = [1.0, 0.0, 0.0]
                 else:
-                    axis1 = normalize(xRightd2)
-                    axis2 = normalize(xLeftd2)
+                    axis1 = normalize(xRightd1)
+                    axis2 = normalize(xLeftd1)
                     side = cross(axis1, axis2)
                     side = [element * -1 for element in side]
 
@@ -452,7 +452,10 @@ class MeshType_2d_tubebifurcationtree1(Scaffold_base):
                         bni4 = bni2 + elementsCountAroundRoot
 
                         # First bifurcation
-                        if (0 < e4 < (generationCount-2)) and (e2 == 0):
+                        if (generationCount == 3) and (0 < e4 <= (generationCount - 2)) and (e3 < 2) and (e2 == 0):
+                            bni3 = ((bni3 + (elementsCountAroundRoot//4)) % elementsCountAroundRoot) + elementsCountAroundRoot
+                            bni4 = ((bni4 + (elementsCountAroundRoot//4)) % elementsCountAroundRoot) + elementsCountAroundRoot
+                        elif (0 < e4 < (generationCount-2)) and (e2 == 0):
                             bni3 = ((bni3 + (elementsCountAroundRoot//4)) % elementsCountAroundRoot) + elementsCountAroundRoot
                             bni4 = ((bni4 + (elementsCountAroundRoot//4)) % elementsCountAroundRoot) + elementsCountAroundRoot
 
